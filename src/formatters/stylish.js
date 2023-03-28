@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 const ident = (depth, spaceCount = 4) => ' '.repeat(depth * spaceCount - 2);
 
-const stringify = (data, deth, mapping) => {
+const stringify = (data, depth, mapping) => {
     if (!_.isObject(data)) {
         return String(data);
     }
@@ -10,6 +10,8 @@ const stringify = (data, deth, mapping) => {
     const output = Object.entries(data)
         .map(([key, value]) => mapping.unchanged({key, value}, depth + 1))
 };
+
+
 
 const mapping = {
     root: ({children}, depth, iter) => {
@@ -37,5 +39,7 @@ const renderThree = (ast) => {
     const iter = (node, depth) => mapping[node.type](node, depth, iter);
     return iter(ast, 0);
 };
+
+
 
 export default renderThree;
