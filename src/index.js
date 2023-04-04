@@ -1,51 +1,30 @@
 import fs from 'fs';
 import path from 'path';
 import _ from 'lodash';
-import parse from './parse.js';
-import format from './formatters/index.js'
-import buildTree from './treeBuider.js'
-
-const buildFullPath = (filepath) => path.resolve(process.cwd(), filepath);
-const getData = (filepath) => parse(fs.readFileSync(filepath, 'utf-8'), extractFormat(filepath));
-
-const extractFormat = (filepath) =>  path.extname(filepath).slice(1);
-
-const genDiff = (path1, path2, formatName = 'stylish') => {
-    const data1 = getData(buildFullPath(path1));
-    const data2 = getData(buildFullPath(path2));
-
-    const tree = buildTree(data1, data2);
-
-    return format(tree, formatName)
-
-}
-// const genDiff = (arrPath) => {
-//     const pathStatic = '../fixture/'
-//     const arrData = arrPath.map(item => JSON.parse(fs.readFileSync(pathStatic + item, 'utf-8')))
-//     console.log(arrData)
-// };
 
 
-// const genDiff = (path1, path2) => {
-//     const data1 = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), path1) , 'utf-8'));
-//     const data2 = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), path2) , 'utf-8'));
-//     const arrPattern = []
-//     const arrData = _.sortBy([].concat(Object.keys(data1), Object.keys(data2)));
-//     arrData.forEach(item => {
-//         if(item in data1 && item in data2 && data1[item] === data2[item]){
-//             arrPattern.push(`  ${item} : ${data2[item]}`)
-//         }else if(item in data1 && item in data2 && data1[item] !== data2[item]){
-//             arrPattern.push(`- ${item} : ${data1[item]}`,`+ ${item} : ${data2[item]}`)
-//         }else if(item in data1){
-//             arrPattern.push(`- ${item} : ${data1[item]}`)
-//         }else{
-//             arrPattern.push(`+ ${item} : ${data2[item]}`)
-//         }
-//     })
+const genDiff = (path1, path2) => {
+    const data1 = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), path1) , 'utf-8'));
+    const data2 = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), path2) , 'utf-8'));
+    const keys = _.union(Object.keys(data1), Object.keys(data2));
+    const sortedKeys = _.sortBy(keys);
+    const diff = sortedKeys.flatMap((key) => {
+        if (_.has(data1, key) && !_.has(data2, key)) {
+           return (`- ${key}: ${data1[key]}`);
+          }
+        if (!_.has(data1, key) && _.has(data2, key)) {
+            return (`+ ${key}: ${data2[key]}`);
+        }
+        if (_.has(data1, key) && _.has(data2, key) && data1[key] !== data2[key]) {
+            return (`- ${key}: ${data1[key]} \n+ ${key}: ${data2[key]}`);
+        }
+          if (data1[key] === data2[key]) {
+            return (`  ${key}: ${data1[key]}`);
+        }
+    })
+    return (`{\n${diff.join('\n')}\n}`);
+};
 
-//     const diff = Object.fromEntries(_.union((arrPattern.map(item => item.split(' : ')))))
-//     console.log(diff)
-// }
 
 // const test2 =  path.resolve(process.cwd(), 'file1.json');
 
